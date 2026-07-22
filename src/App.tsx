@@ -1,10 +1,24 @@
+import { Navigate, Route, Routes } from "react-router";
 import "./App.css";
+import Sidenav from "./components/Sidenav";
+
+function FeedPage({ title }: { title: string }) {
+  return <h1 className="text-2xl font-semibold">{title}</h1>;
+}
 
 function App() {
   return (
     <>
-      <section>
-        <section className="text-2xl font-bold">Hi</section>
+      <main className="w-full h-screen fixed flex">
+        <Sidenav />
+        <Routes>
+          <Route path="/" element={<Navigate to="/new" replace />} />
+          <Route path="/new" element={<FeedPage title="New" />} />
+          <Route path="/ask" element={<FeedPage title="Ask" />} />
+          <Route path="/show" element={<FeedPage title="Show" />} />
+          <Route path="/jobs" element={<FeedPage title="Jobs" />} />
+          <Route path="*" element={<Navigate to="/new" replace />} />
+        </Routes>
         <footer className="credits" data-gfe-screenshot-exclude="true">
           A challenge by{" "}
           <a
@@ -22,7 +36,7 @@ function App() {
           </a>
           .
         </footer>
-      </section>
+      </main>
     </>
   );
 }

@@ -1,0 +1,68 @@
+/**
+ * Design tokens → Tailwind utilities (v4 @theme).
+ *
+ * Every `--color-*` / `--font-*` / `--text-*` / `--breakpoint-*` / `--radius-*`
+ * here is a CSS variable AND a Tailwind class:
+ *
+ *   --color-orange-600  →  bg-orange-600, text-orange-600, border-orange-600, …
+ *   --font-sans         →  font-sans
+ *   --text-sm           →  text-sm
+ *   --breakpoint-md     →  md:…
+ *   --radius-md         →  rounded-md
+ *
+ * Figma for this challenge uses Tailwind’s default Neutral + Orange + Red scales.
+ * We pin the values used in the Style Guide so utilities always resolve to those tokens.
+ */
+
+@theme {
+  /* Font */
+  --font-sans:
+    "Noto Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+
+  /* Neutrals (Figma) */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-900: #171717;
+  --color-neutral-950: #0a0a0a;
+
+  /* Brand — Orange (Figma; this challenge’s accent, not Indigo) */
+  --color-orange-50: #fff7ed;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+
+  /* Feedback */
+  --color-red-50: #fef2f2;
+  --color-red-200: #fecaca;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+  --color-red-800: #991b1b;
+
+  /*
+   * Breakpoints aligned to GFE device widths:
+   *   mobile  < 768px   (default)
+   *   tablet  ≥ 768px   → md:
+   *   desktop ≥ 1440px  → xl:  (lg kept at Tailwind default 1024px for in-between)
+   */
+  --breakpoint-md: 48rem; /* 768px */
+  --breakpoint-xl: 90rem; /* 1440px */
+
+  /* Layout (use as var(--container-max), not as utilities) */
+  --container-max: 80rem; /* 1280px */
+  --page-padding-mobile: 1rem; /* 16px */
+  --page-padding: 2rem; /* 32px */
+  --grid-gap-mobile: 1rem; /* 16px */
+  --grid-gap: 2rem; /* 32px */
+
+  /* Radius */
+  --radius-sm: 0.25rem; /* 4px */
+  --radius-md: 0.375rem; /* 6px */
+  --radius-lg: 0.5rem; /* 8px */
+  --radius-xl: 0.75rem; /* 12px */
+  --radius-full: 9999px;
+}

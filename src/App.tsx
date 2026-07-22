@@ -1,10 +1,7 @@
 import { Navigate, Route, Routes } from "react-router";
 import "./App.css";
 import Sidenav from "./components/Sidenav";
-
-function FeedPage({ title }: { title: string }) {
-  return <h1 className="text-2xl font-semibold">{title}</h1>;
-}
+import FeedPage from "./components/FeedPage";
 
 function App() {
   return (
@@ -13,10 +10,42 @@ function App() {
         <Sidenav />
         <Routes>
           <Route path="/" element={<Navigate to="/new" replace />} />
-          <Route path="/new" element={<FeedPage title="New" />} />
-          <Route path="/ask" element={<FeedPage title="Ask" />} />
-          <Route path="/show" element={<FeedPage title="Show" />} />
-          <Route path="/jobs" element={<FeedPage title="Jobs" />} />
+          <Route
+            path="/new"
+            element={
+              <FeedPage
+                title="New"
+                description="Discover the latest submissions in the Hacker News community."
+              />
+            }
+          />
+          <Route
+            path="/ask"
+            element={
+              <FeedPage
+                title="Ask"
+                description="Discover the latest submissions in the Hacker News community."
+              />
+            }
+          />
+          <Route
+            path="/show"
+            element={
+              <FeedPage
+                title="Show"
+                description="Discover the latest submissions in the Hacker News community."
+              />
+            }
+          />
+          <Route
+            path="/jobs"
+            element={
+              <FeedPage
+                title="Jobs"
+                description="Discover the latest submissions in the Hacker News community."
+              />
+            }
+          />
           <Route path="*" element={<Navigate to="/new" replace />} />
         </Routes>
         <footer className="credits" data-gfe-screenshot-exclude="true">

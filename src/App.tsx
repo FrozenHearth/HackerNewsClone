@@ -14,6 +14,7 @@ function App() {
             path="/new"
             element={
               <FeedPage
+                feed="new"
                 title="New"
                 description="Discover the latest submissions in the Hacker News community."
               />
@@ -23,6 +24,7 @@ function App() {
             path="/ask"
             element={
               <FeedPage
+                feed="ask"
                 title="Ask"
                 description="Discover the latest submissions in the Hacker News community."
               />
@@ -32,6 +34,7 @@ function App() {
             path="/show"
             element={
               <FeedPage
+                feed="show"
                 title="Show"
                 description="Discover the latest submissions in the Hacker News community."
               />
@@ -41,6 +44,7 @@ function App() {
             path="/jobs"
             element={
               <FeedPage
+                feed="jobs"
                 title="Jobs"
                 description="Discover the latest submissions in the Hacker News community."
               />
@@ -48,24 +52,8 @@ function App() {
           />
           <Route path="*" element={<Navigate to="/new" replace />} />
         </Routes>
-        <footer className="credits" data-gfe-screenshot-exclude="true">
-          A challenge by{" "}
-          <a
-            href="https://www.greatfrontend.com/projects?ref=challenges"
-            target="_blank"
-          >
-            GreatFrontEnd Projects
-          </a>
-          . Built by{" "}
-          <a
-            href="https://www.greatfrontend.com/projects/u/FrozenHearth"
-            target="_blank"
-          >
-            Vishwanath
-          </a>
-          .
-        </footer>
       </main>
+      <footer data-gfe-screenshot-exclude="true"></footer>
     </>
   );
 }

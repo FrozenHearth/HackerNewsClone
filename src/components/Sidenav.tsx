@@ -16,7 +16,7 @@ const links = [
 export default function Sidenav() {
   return (
     <nav
-      className="text-sm xl:flex flex-col w-60 p-4 pt-6 border-r border-sidebar-border h-full hidden"
+      className="hidden h-full w-60 flex-col border-r border-neutral-200 p-4 pt-6 text-sm xl:flex"
       aria-label="Feed categories"
     >
       <header className="py-4 flex items-center">

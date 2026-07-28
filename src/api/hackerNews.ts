@@ -9,20 +9,25 @@ export const FEEDS = {
 
 export type FeedKey = keyof typeof FEEDS;
 
+export type HnItemType = "job" | "story" | "comment" | "poll" | "pollopt";
+
+/** Hacker News item from `/v0/item/:id.json`. */
 export type HnItem = {
   id: number;
-  type: "job" | "story" | "comment" | "poll" | "pollopt";
+  deleted?: boolean;
+  type?: HnItemType;
   by?: string;
-  time: number;
-  title?: string;
+  time?: number;
   text?: string;
+  dead?: boolean;
+  parent?: number;
+  poll?: number;
+  kids?: number[];
   url?: string;
   score?: number;
-  descendants?: number;
-  kids?: number[];
+  title?: string;
   parts?: number[];
-  dead?: boolean;
-  deleted?: boolean;
+  descendants?: number;
 };
 
 async function getJson<T>(path: string): Promise<T> {

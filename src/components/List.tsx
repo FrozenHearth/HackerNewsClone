@@ -3,6 +3,7 @@ import { formatTimeAgo, formatTimeIso } from "@/lib/utils";
 import {
   RiArrowUpDoubleLine,
   RiArticleLine,
+  RiBarChart2Line,
   RiChat2Line,
   RiExternalLinkLine,
   RiTimeLine,
@@ -16,6 +17,14 @@ function getDomain(url: string) {
   } catch {
     return url;
   }
+}
+
+type CardKind = "url" | "article" | "poll";
+
+function getCardKind(item: HnItem): CardKind {
+  if (item.type === "poll") return "poll";
+  if (item.url) return "url";
+  return "article";
 }
 
 function StoryMeta({ item }: { item: HnItem }) {
@@ -63,33 +72,32 @@ function StoryMeta({ item }: { item: HnItem }) {
   );
 }
 
-function StoryContent({
-  item,
-  kind,
-}: {
-  item: HnItem;
-  kind: "url" | "article";
-}) {
-  const navigate = useNavigate();
-  function navigateToDetailsPage(item: HnItem) {
-    navigate(`/story/${item.id}`, {
-      state: { item },
-    });
+function StoryIcon({ kind }: { kind: CardKind }) {
+  if (kind === "url") {
+    return <RiExternalLinkLine className="size-5 text-neutral-700" />;
   }
+  if (kind === "poll") {
+    return <RiBarChart2Line className="size-5 text-neutral-700" />;
+  }
+  return <RiArticleLine className="size-5 text-neutral-700" />;
+}
+
+function StoryContent({ item, kind }: { item: HnItem; kind: CardKind }) {
+  const navigate = useNavigate();
+
   return (
     <article
-      onClick={() => kind !== "url" && navigateToDetailsPage(item)}
+      onClick={() =>
+        kind !== "url" &&
+        navigate(`/story/${item.id}`, { state: { item } })
+      }
       className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 py-6"
     >
       <span
         className="row-span-2 flex size-10 items-center justify-center rounded-full bg-neutral-50 p-2"
         aria-hidden="true"
       >
-        {kind === "url" ? (
-          <RiExternalLinkLine className="size-5 text-neutral-700" />
-        ) : (
-          <RiArticleLine className="size-5 text-neutral-700" />
-        )}
+        <StoryIcon kind={kind} />
       </span>
 
       <h2 className="flex flex-wrap items-baseline gap-1">
@@ -112,8 +120,7 @@ export default function List({ items }: { items: HnItem[] }) {
   return (
     <ul className="flex flex-col px-4 md:px-8 xl:px-0" aria-label="Stories">
       {items.map((item) => {
-        const kind = item.url ? "url" : "article";
-
+        const kind = getCardKind(item);
         const rowClassName = "cursor-pointer rounded-lg hover:bg-orange-50";
 
         if (kind === "url" && item.url) {
@@ -133,7 +140,7 @@ export default function List({ items }: { items: HnItem[] }) {
 
         return (
           <li key={item.id} className={rowClassName}>
-            <StoryContent item={item} kind="article" />
+            <StoryContent item={item} kind={kind} />
           </li>
         );
       })}

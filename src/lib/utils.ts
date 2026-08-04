@@ -16,3 +16,8 @@ export function formatTimeAgo(unixSeconds: number) {
 export function formatTimeIso(unixSeconds: number) {
   return dayjs.unix(unixSeconds).toISOString();
 }
+
+export function decodeHtmlEntities(text: string) {
+  const doc = new DOMParser().parseFromString(text, "text/html");
+  return doc.documentElement.textContent ?? "";
+}

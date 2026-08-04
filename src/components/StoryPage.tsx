@@ -1,4 +1,9 @@
-import { getItem, type HnItem } from "@/api/hackerNews";
+import { getItem, getItems, type HnItem } from "@/api/hackerNews";
+import CommentThread, { type CommentNode } from "@/components/CommentThread";
+import StoryPageSkeleton, {
+  CommentsSkeleton,
+} from "@/components/StoryPageSkeleton";
+import PollOptions from "@/components/PollOptions";
 import { formatTimeAgo, formatTimeIso } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import {
@@ -14,14 +19,19 @@ const backButtonClass =
   "inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-sm px-3.5 py-2.5 text-sm font-medium text-orange-500 hover:text-orange-800 focus:bg-neutral-50 focus:text-orange-800 focus:ring-4 focus:ring-orange-800/20 focus:outline-none disabled:cursor-not-allowed disabled:text-neutral-400";
 
 const metaRowClass =
-  "flex flex-nowrap items-center gap-1 text-sm font-normal text-secondary-foreground";
+  "flex flex-nowrap items-center gap-1 text-sm font-normal text-neutral-600";
 
-const commentBodyClass =
-  "text-sm font-normal text-neutral-900 [&_a]:break-all [&_a]:font-normal [&_a]:text-orange-500 [&_a]:hover:text-orange-700 [&_code]:break-all";
+async function loadCommentTree(kids: number[]): Promise<CommentNode[]> {
+  const items = await getItems(kids);
 
-async function loadComments(kids: number[]) {
-  const results = await Promise.all(kids?.map((id) => getItem(id)));
-  return results?.filter((item): item is HnItem => item != null);
+  return Promise.all(
+    items
+      .filter((item) => !item.deleted)
+      .map(async (item) => ({
+        ...item,
+        replies: item.kids?.length ? await loadCommentTree(item.kids) : [],
+      })),
+  );
 }
 
 export default function StoryPage() {
@@ -29,7 +39,10 @@ export default function StoryPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const [story, setStory] = useState<HnItem | null>(null);
-  const [comments, setComments] = useState<HnItem[]>([]);
+  const [pollOptions, setPollOptions] = useState<HnItem[]>([]);
+  const [comments, setComments] = useState<CommentNode[]>([]);
+  const [isLoadingStory, setIsLoadingStory] = useState(true);
+  const [isLoadingComments, setIsLoadingComments] = useState(false);
 
   useEffect(() => {
     const storyId = id ? Number(id) : location.state?.item?.id;
@@ -37,7 +50,13 @@ export default function StoryPage() {
 
     let cancelled = false;
 
-    async function loadItemsAndComments() {
+    async function load() {
+      setIsLoadingStory(true);
+      setIsLoadingComments(true);
+      setStory(null);
+      setPollOptions([]);
+      setComments([]);
+
       try {
         const item =
           location.state?.item?.id === storyId
@@ -46,14 +65,32 @@ export default function StoryPage() {
 
         if (cancelled || !item) return;
 
+        if (item.type === "poll" && item.parts?.length) {
+          const options = await getItems(item.parts);
+          if (cancelled) return;
+          setPollOptions(options);
+        }
+
         setStory(item);
-        setComments(item.kids?.length ? await loadComments(item.kids) : []);
+        setIsLoadingStory(false);
+
+        if (!item.kids?.length) {
+          setIsLoadingComments(false);
+          return;
+        }
+
+        const commentsTree = await loadCommentTree(item.kids);
+        if (cancelled) return;
+        setComments(commentsTree);
       } catch (error) {
         console.error(error);
+        if (!cancelled) setIsLoadingStory(false);
+      } finally {
+        if (!cancelled) setIsLoadingComments(false);
       }
     }
 
-    loadItemsAndComments();
+    load();
 
     return () => {
       cancelled = true;
@@ -61,6 +98,8 @@ export default function StoryPage() {
   }, [id, location.state]);
 
   const commentCount = story?.descendants ?? 0;
+  const isPoll = story?.type === "poll";
+  const hasComments = Boolean(story?.kids?.length);
 
   return (
     <main className="flex flex-1 flex-col overflow-auto xl:px-16">
@@ -75,70 +114,82 @@ export default function StoryPage() {
         </button>
       </header>
 
-      <section className="flex w-full flex-col gap-12 overflow-x-auto px-4 py-6 md:gap-10 md:px-8 md:py-10 xl:mx-auto xl:max-w-222.5 xl:px-0">
-        <div className="flex flex-col gap-6 md:gap-4">
-          <h1 className="text-3xl font-semibold text-foreground md:text-4xl">
-            {story?.title ?? ""}
-          </h1>
+      <section className="flex w-full flex-col gap-12 px-4 py-6 md:gap-10 md:px-8 md:py-10 xl:mx-auto xl:max-w-222.5 xl:px-0">
+        {isLoadingStory ? (
+          <StoryPageSkeleton />
+        ) : (
+          <>
+            <div className="flex flex-col gap-6 md:gap-4">
+              <h1 className="text-3xl font-semibold text-neutral-900 md:text-4xl">
+                {story?.title ?? ""}
+              </h1>
 
-          <div className="flex flex-wrap gap-3">
-            {story?.score != null && (
-              <div className={metaRowClass}>
-                <RiArrowUpDoubleLine
-                  className="text-neutral-900"
-                  size={20}
-                  aria-hidden="true"
-                />
-                {story.score} {story.score === 1 ? "point" : "points"}
+              <div className="flex flex-wrap gap-3">
+                {story?.score != null && (
+                  <div className={metaRowClass}>
+                    <RiArrowUpDoubleLine
+                      className="text-neutral-900"
+                      size={20}
+                      aria-hidden="true"
+                    />
+                    {story.score} {story.score === 1 ? "point" : "points"}
+                  </div>
+                )}
+
+                <div className={metaRowClass}>
+                  <RiPenNibLine
+                    className="text-neutral-900"
+                    size={20}
+                    aria-hidden="true"
+                  />
+                  by{" "}
+                  <span className="font-medium text-orange-500">
+                    {story?.by ?? ""}
+                  </span>
+                </div>
+
+                {story?.time != null && (
+                  <div className={metaRowClass}>
+                    <RiTimeLine
+                      className="text-neutral-900"
+                      size={20}
+                      aria-hidden="true"
+                    />
+                    <time dateTime={formatTimeIso(story.time)}>
+                      {formatTimeAgo(story.time)}
+                    </time>
+                  </div>
+                )}
+
+                {commentCount > 0 ? (
+                  <div className={metaRowClass}>
+                    <RiChat2Line
+                      className="text-neutral-900"
+                      size={20}
+                      aria-hidden="true"
+                    />
+                    {commentCount === 1
+                      ? `${commentCount} comment`
+                      : `${commentCount} comments`}
+                  </div>
+                ) : null}
               </div>
-            )}
-
-            <div className={metaRowClass}>
-              <RiPenNibLine
-                className="text-neutral-900"
-                size={20}
-                aria-hidden="true"
-              />
-              by{" "}
-              <span className="font-medium text-orange-500">
-                {story?.by ?? ""}
-              </span>
             </div>
 
-            {story?.time != null && (
-              <div className={metaRowClass}>
-                <RiTimeLine
-                  className="text-neutral-900"
-                  size={20}
-                  aria-hidden="true"
-                />
-                <time dateTime={formatTimeIso(story.time)}>
-                  {formatTimeAgo(story.time)}
-                </time>
-              </div>
-            )}
+            {isPoll ? (
+              <PollOptions pollOptions={pollOptions} />
+            ) : story?.text ? (
+              <article
+                dangerouslySetInnerHTML={{ __html: story.text }}
+                className="flex flex-col gap-6 text-base font-normal text-neutral-600 md:text-lg"
+              />
+            ) : null}
+          </>
+        )}
 
-            {commentCount > 0 && (
-              <div className={metaRowClass}>
-                <RiChat2Line
-                  className="text-neutral-900"
-                  size={20}
-                  aria-hidden="true"
-                />
-                {commentCount === 1
-                  ? `${commentCount} comment`
-                  : `${commentCount} comments`}
-              </div>
-            )}
-          </div>
-        </div>
-
-        <article
-          dangerouslySetInnerHTML={{ __html: story?.text ?? "" }}
-          className="flex flex-col gap-6 text-base font-normal text-neutral-600 md:text-lg"
-        />
-
-        {story?.kids?.length ? (
+        {isLoadingStory || isLoadingComments ? (
+          <CommentsSkeleton />
+        ) : hasComments ? (
           <footer className="w-full border-t border-neutral-200">
             <h2 className="py-4 text-lg font-medium text-neutral-900">
               {commentCount === 1
@@ -147,19 +198,7 @@ export default function StoryPage() {
             </h2>
             <ul className="flex w-full flex-col gap-4">
               {comments.map((comment) => (
-                <li key={comment.id} className="flex w-full flex-col gap-3">
-                  <p className="text-sm font-normal text-neutral-600">
-                    <span className="font-semibold text-neutral-900">
-                      {comment.by}
-                    </span>{" "}
-                    • {formatTimeAgo(comment.time ?? 0)}
-                  </p>
-                  <article
-                    dangerouslySetInnerHTML={{ __html: comment.text ?? "" }}
-                    className={commentBodyClass}
-                  />
-                  <hr className="h-px w-full border-0 bg-neutral-200" />
-                </li>
+                <CommentThread key={comment.id} comment={comment} />
               ))}
             </ul>
           </footer>

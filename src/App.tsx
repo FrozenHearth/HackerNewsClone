@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router";
 import "./App.css";
 import Sidenav from "./components/Sidenav";
 import FeedPage from "./components/FeedPage";
+import StoryPage from "./components/StoryPage";
 
 function App() {
   return (
@@ -50,6 +51,7 @@ function App() {
               />
             }
           />
+          <Route path="/story/:id" element={<StoryPage />} />
           <Route path="*" element={<Navigate to="/new" replace />} />
         </Routes>
       </main>

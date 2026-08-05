@@ -9,6 +9,8 @@ export default function useFeedList(feed: FeedKey, pageSize = 20) {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
+
     setList([]);
     setPage(1);
     setHasMore(false);
@@ -18,16 +20,21 @@ export default function useFeedList(feed: FeedKey, pageSize = 20) {
     async function loadInitialPage() {
       try {
         const { items, hasMore } = await getFeedPage(feed, 1, pageSize);
+        if (cancelled) return;
         setList(items);
         setHasMore(hasMore);
       } catch (error) {
         console.error(error);
       } finally {
-        setIsInitialLoading(false);
+        if (!cancelled) setIsInitialLoading(false);
       }
     }
 
     loadInitialPage();
+
+    return () => {
+      cancelled = true;
+    };
   }, [feed, pageSize]);
 
   async function loadMore() {

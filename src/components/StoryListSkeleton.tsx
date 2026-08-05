@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 function StoryRowSkeleton() {
   return (
     <div
-      className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 py-6"
+      className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 py-6"
       aria-hidden="true"
     >
       <Skeleton className="size-10 rounded-full" />

@@ -16,7 +16,7 @@ import {
 import { useLocation, useNavigate, useParams } from "react-router";
 
 const backButtonClass =
-  "inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-sm px-3.5 py-2.5 text-sm font-medium text-orange-500 hover:text-orange-800 focus:bg-neutral-50 focus:text-orange-800 focus:ring-4 focus:ring-orange-800/20 focus:outline-none disabled:cursor-not-allowed disabled:text-neutral-400";
+  "justify-center inline-flex items-center font-medium rounded-sm shadow-sm not-disabled:cursor-pointer disabled:cursor-not-allowed focus:outline-none focus:ring-4 [&_svg:not([class*='size-'])]:size-5 shadow-none! p-0! text-orange-500 hover:text-orange-800 focus:text-orange-800 focus:bg-neutral-50 focus:ring-orange-800/20 disabled:text-neutral-400 px-3.5 py-2.5 text-sm gap-1.5";
 
 const metaRowClass =
   "flex flex-nowrap items-center gap-1 text-sm font-normal text-neutral-600";

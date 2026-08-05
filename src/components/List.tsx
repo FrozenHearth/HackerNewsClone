@@ -88,10 +88,9 @@ function StoryContent({ item, kind }: { item: HnItem; kind: CardKind }) {
   return (
     <article
       onClick={() =>
-        kind !== "url" &&
-        navigate(`/story/${item.id}`, { state: { item } })
+        kind !== "url" && navigate(`/story/${item.id}`, { state: { item } })
       }
-      className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-2 py-6"
+      className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 py-6"
     >
       <span
         className="row-span-2 flex size-10 items-center justify-center rounded-full bg-neutral-50 p-2"

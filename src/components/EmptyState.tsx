@@ -13,7 +13,7 @@ const feedIcons = {
   jobs: RiBriefcase3Line,
 } as const;
 
-export default function EmptyState({ feed }: { feed: FeedKey }) {
+export default function EmptyState({ feed = "new" }: { feed?: FeedKey }) {
   const Icon = feedIcons[feed];
 
   return (

@@ -1,5 +1,6 @@
 import { getItem, getItems, type HnItem } from "@/api/hackerNews";
 import CommentThread, { type CommentNode } from "@/components/CommentThread";
+import EmptyState from "@/components/EmptyState";
 import StoryPageSkeleton, {
   CommentsSkeleton,
 } from "@/components/StoryPageSkeleton";
@@ -43,16 +44,25 @@ export default function StoryPage() {
   const [comments, setComments] = useState<CommentNode[]>([]);
   const [isLoadingStory, setIsLoadingStory] = useState(true);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   useEffect(() => {
     const storyId = id ? Number(id) : location.state?.item?.id;
-    if (!storyId || Number.isNaN(storyId)) return;
 
     let cancelled = false;
 
     async function load() {
+      if (!storyId || Number.isNaN(storyId)) {
+        setStory(null);
+        setHasError(true);
+        setIsLoadingStory(false);
+        setIsLoadingComments(false);
+        return;
+      }
+
       setIsLoadingStory(true);
       setIsLoadingComments(true);
+      setHasError(false);
       setStory(null);
       setPollOptions([]);
       setComments([]);
@@ -63,7 +73,14 @@ export default function StoryPage() {
             ? location.state.item
             : await getItem(storyId);
 
-        if (cancelled || !item) return;
+        if (cancelled) return;
+
+        if (!item) {
+          setHasError(true);
+          setIsLoadingStory(false);
+          setIsLoadingComments(false);
+          return;
+        }
 
         if (item.type === "poll" && item.parts?.length) {
           const options = await getItems(item.parts);
@@ -84,7 +101,10 @@ export default function StoryPage() {
         setComments(commentsTree);
       } catch (error) {
         console.error(error);
-        if (!cancelled) setIsLoadingStory(false);
+        if (!cancelled) {
+          setHasError(true);
+          setIsLoadingStory(false);
+        }
       } finally {
         if (!cancelled) setIsLoadingComments(false);
       }
@@ -100,6 +120,7 @@ export default function StoryPage() {
   const commentCount = story?.descendants ?? 0;
   const isPoll = story?.type === "poll";
   const hasComments = Boolean(story?.kids?.length);
+  const showEmpty = !isLoadingStory && (hasError || !story);
 
   return (
     <main className="flex flex-1 flex-col overflow-auto xl:px-16">
@@ -114,96 +135,100 @@ export default function StoryPage() {
         </button>
       </header>
 
-      <section className="flex w-full flex-col gap-12 px-4 py-6 md:gap-10 md:px-8 md:py-10 xl:mx-auto xl:max-w-222.5 xl:px-0">
-        {isLoadingStory ? (
-          <StoryPageSkeleton />
-        ) : (
-          <>
-            <div className="flex flex-col gap-6 md:gap-4">
-              <h1 className="text-3xl font-semibold text-neutral-900 md:text-4xl">
-                {story?.title ?? ""}
-              </h1>
+      {showEmpty ? (
+        <EmptyState />
+      ) : (
+        <section className="flex w-full flex-col gap-12 px-4 py-6 md:gap-10 md:px-8 md:py-10 xl:mx-auto xl:max-w-222.5 xl:px-0">
+          {isLoadingStory ? (
+            <StoryPageSkeleton />
+          ) : (
+            <>
+              <div className="flex flex-col gap-6 md:gap-4">
+                <h1 className="text-3xl font-semibold text-neutral-900 md:text-4xl">
+                  {story?.title ?? ""}
+                </h1>
 
-              <div className="flex flex-wrap gap-3">
-                {story?.score != null && (
+                <div className="flex flex-wrap gap-3">
+                  {story?.score != null && (
+                    <div className={metaRowClass}>
+                      <RiArrowUpDoubleLine
+                        className="text-neutral-900"
+                        size={20}
+                        aria-hidden="true"
+                      />
+                      {story.score} {story.score === 1 ? "point" : "points"}
+                    </div>
+                  )}
+
                   <div className={metaRowClass}>
-                    <RiArrowUpDoubleLine
+                    <RiPenNibLine
                       className="text-neutral-900"
                       size={20}
                       aria-hidden="true"
                     />
-                    {story.score} {story.score === 1 ? "point" : "points"}
+                    by{" "}
+                    <span className="font-medium text-orange-500">
+                      {story?.by ?? ""}
+                    </span>
                   </div>
-                )}
 
-                <div className={metaRowClass}>
-                  <RiPenNibLine
-                    className="text-neutral-900"
-                    size={20}
-                    aria-hidden="true"
-                  />
-                  by{" "}
-                  <span className="font-medium text-orange-500">
-                    {story?.by ?? ""}
-                  </span>
+                  {story?.time != null && (
+                    <div className={metaRowClass}>
+                      <RiTimeLine
+                        className="text-neutral-900"
+                        size={20}
+                        aria-hidden="true"
+                      />
+                      <time dateTime={formatTimeIso(story.time)}>
+                        {formatTimeAgo(story.time)}
+                      </time>
+                    </div>
+                  )}
+
+                  {commentCount > 0 ? (
+                    <div className={metaRowClass}>
+                      <RiChat2Line
+                        className="text-neutral-900"
+                        size={20}
+                        aria-hidden="true"
+                      />
+                      {commentCount === 1
+                        ? `${commentCount} comment`
+                        : `${commentCount} comments`}
+                    </div>
+                  ) : null}
                 </div>
-
-                {story?.time != null && (
-                  <div className={metaRowClass}>
-                    <RiTimeLine
-                      className="text-neutral-900"
-                      size={20}
-                      aria-hidden="true"
-                    />
-                    <time dateTime={formatTimeIso(story.time)}>
-                      {formatTimeAgo(story.time)}
-                    </time>
-                  </div>
-                )}
-
-                {commentCount > 0 ? (
-                  <div className={metaRowClass}>
-                    <RiChat2Line
-                      className="text-neutral-900"
-                      size={20}
-                      aria-hidden="true"
-                    />
-                    {commentCount === 1
-                      ? `${commentCount} comment`
-                      : `${commentCount} comments`}
-                  </div>
-                ) : null}
               </div>
-            </div>
 
-            {isPoll ? (
-              <PollOptions pollOptions={pollOptions} />
-            ) : story?.text ? (
-              <article
-                dangerouslySetInnerHTML={{ __html: story.text }}
-                className="flex flex-col gap-6 text-base font-normal text-neutral-600 md:text-lg"
-              />
-            ) : null}
-          </>
-        )}
+              {isPoll ? (
+                <PollOptions pollOptions={pollOptions} />
+              ) : story?.text ? (
+                <article
+                  dangerouslySetInnerHTML={{ __html: story.text }}
+                  className="flex flex-col gap-6 text-base font-normal text-neutral-600 md:text-lg"
+                />
+              ) : null}
+            </>
+          )}
 
-        {isLoadingStory || isLoadingComments ? (
-          <CommentsSkeleton />
-        ) : hasComments ? (
-          <footer className="w-full border-t border-neutral-200">
-            <h2 className="py-4 text-lg font-medium text-neutral-900">
-              {commentCount === 1
-                ? `${commentCount} comment`
-                : `${commentCount} comments`}
-            </h2>
-            <ul className="flex w-full flex-col gap-4">
-              {comments.map((comment) => (
-                <CommentThread key={comment.id} comment={comment} />
-              ))}
-            </ul>
-          </footer>
-        ) : null}
-      </section>
+          {isLoadingStory || isLoadingComments ? (
+            <CommentsSkeleton />
+          ) : hasComments ? (
+            <footer className="w-full border-t border-neutral-200">
+              <h2 className="py-4 text-lg font-medium text-neutral-900">
+                {commentCount === 1
+                  ? `${commentCount} comment`
+                  : `${commentCount} comments`}
+              </h2>
+              <ul className="flex w-full flex-col gap-4">
+                {comments.map((comment) => (
+                  <CommentThread key={comment.id} comment={comment} />
+                ))}
+              </ul>
+            </footer>
+          ) : null}
+        </section>
+      )}
     </main>
   );
 }
